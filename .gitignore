@@ -2,5 +2,4 @@
 .metadata/
 .project
 .settings/
-build.sbt
 target/
