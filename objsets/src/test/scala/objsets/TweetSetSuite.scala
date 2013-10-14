@@ -16,6 +16,23 @@ class TweetSetSuite extends FunSuite {
     val set4c = set3.incl(c)
     val set4d = set3.incl(d)
     val set5 = set4c.incl(d)
+    
+    val s = new Empty
+    val sg = s.incl(new Tweet("g", "g", 40))
+    val scg = sg.incl(new Tweet("c", "c", 20))
+    val sceg = scg.incl(new Tweet("e", "e", 30))
+    val saceg = sceg.incl(new Tweet("a", "a", 10))
+    val sacegk = saceg.incl(new Tweet("k", "k", 60))
+    val sacegik = sacegk.incl(new Tweet("i", "i", 50))
+    val sacegikm = sacegik.incl(new Tweet("m", "m", 70))
+    
+    val sh = s.incl(new Tweet("h", "h", 110))
+    val sdh = sh.incl(new Tweet("d", "d", 90))
+    val sdfh = sdh.incl(new Tweet("f", "f", 100))
+    val sbdfh = sdfh.incl(new Tweet("b", "b", 80))
+    val sbdfhl = sbdfh.incl(new Tweet("l", "l", 130))
+    val sbdfhjl = sbdfhl.incl(new Tweet("j", "j", 120))
+    val sbdfhjln = sbdfhjl.incl(new Tweet("n", "n", 140))
   }
 
   def asSet(tweets: TweetSet): Set[Tweet] = {
@@ -59,6 +76,14 @@ class TweetSetSuite extends FunSuite {
   test("union: with empty set (2)") {
     new TestSets {
       assert(size(set1.union(set5)) === 4)
+    }
+  }
+  
+  test("union with full trees") {
+    new TestSets {
+      val bigUnion = sacegikm.union(sbdfhjln)
+      assert(size(bigUnion) === 14)
+//      bigUnion foreach println
     }
   }
 
