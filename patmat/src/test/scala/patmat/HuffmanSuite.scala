@@ -12,6 +12,12 @@ class HuffmanSuite extends FunSuite {
   trait TestTrees {
     val t1 = Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
     val t2 = Fork(Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5), Leaf('d',4), List('a','b','d'), 9)
+    val chars1 = "abbcccddddeeeee".toList
+    val chars2 = "abcdebcdecdedee".toList
+    val chars3 = chars1.reverse
+    val expectedFrequencies = List(('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5))
+    val expectedFrequencies2 = expectedFrequencies.reverse
+    val orderedLeafList = List(Leaf('a', 1), Leaf('b', 2), Leaf('c', 3), Leaf('d', 4), Leaf('e', 5))
   }
 
   test("weight of a larger tree") {
@@ -29,9 +35,31 @@ class HuffmanSuite extends FunSuite {
   test("string2chars(\"hello, world\")") {
     assert(string2Chars("hello, world") === List('h', 'e', 'l', 'l', 'o', ',', ' ', 'w', 'o', 'r', 'l', 'd'))
   }
+  
+  test("times of a large list of chars") {
+    new TestTrees {
+      assert(expectedFrequencies === times(chars1))
+      assert(expectedFrequencies === times(chars2))
+      assert(expectedFrequencies2 === times(chars3))
+    }
+  }
+  
+  test("makeOrderedLeafList properly generates a list of leafs in ascending order") {
+    new TestTrees {
+      assert(orderedLeafList === makeOrderedLeafList(expectedFrequencies))
+      assert(orderedLeafList === makeOrderedLeafList(expectedFrequencies2))
+    }
+  }
 
   test("makeOrderedLeafList for some frequency table") {
     assert(makeOrderedLeafList(List(('t', 2), ('e', 1), ('x', 3))) === List(Leaf('e',1), Leaf('t',2), Leaf('x',3)))
+  }
+  
+  test("singleton returns true if lists contains one CodeTree") {
+    new TestTrees {
+      assert(singleton(List(t1)))
+      assert(!singleton(List(t1, t2)))
+    }
   }
 
   test("combine of some leaf list") {
