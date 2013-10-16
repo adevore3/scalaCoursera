@@ -39,29 +39,27 @@ object Huffman {
   def makeCodeTree(left: CodeTree, right: CodeTree) =
     Fork(left, right, chars(left) ::: chars(right), weight(left) + weight(right))
 
-
+  def insert[A](elem: A, la: List[A], f: (A, A) => Boolean): List[A] = {
+    def aux(x: A, lx: List[A]): List[A] = lx match {
+      case List() => List(x)
+	  case l :: ls => 
+	    if (f(x, l)) x :: lx 
+	    else l :: aux(x, ls)  
+    }
+	aux(elem, la)
+  }
 
   // Part 2: Generating Huffman trees
-    
   def insertionSort[A](la: List[A], f: (A, A) => Boolean): List[A] = {
-    def insert(x: A, lx: List[A]): List[A] = lx match {
-      case List() => List(x)
-      case l :: ls => 
-        if (f(x, l)) x :: lx 
-        else l :: insert(x, ls)
-    }
-    
     la match {
       case List() => List()
-      case l :: ls => insert(l, insertionSort(ls, f))
+      case l :: ls => insert(l, insertionSort(ls, f), f)
     }
   }
   
   def compare(x: CodeTree, y: CodeTree) = {
     weight(x) < weight(y)
   }
-    
-	
 
   /**
    * In this assignment, we are working with lists of characters. This function allows
@@ -123,21 +121,8 @@ object Huffman {
    * of a leaf is the frequency of the character.
    */
   def makeOrderedLeafList(freqs: List[(Char, Int)]): List[Leaf] = {
-//    def aux(fs: List[(Char, Int)], acc: List[Leaf]): List[Leaf] = fs match {
-//      case (char, count) :: fqs => aux(fqs, insert(Leaf(char, count), acc))
-//      case List() => acc
-//    }
-//    
-//    def insert(leaf: Leaf, leafList: List[Leaf]): List[Leaf] = leafList match {
-//      case List() => List(leaf)
-//      case l :: ls => 
-//        if (leaf.weight < l.weight) leaf :: leafList 
-//        else l :: insert(leaf, ls)
-//    }
-//    
-//    aux(freqs, List[Leaf]())
     val leafs = for { (char, count) <- freqs }yield(Leaf(char, count))
-    insertionSort(leafs, compare )
+    insertionSort(leafs, compare)
   }
 
   /**
@@ -159,10 +144,7 @@ object Huffman {
    */
   def combine(trees: List[CodeTree]): List[CodeTree] = {
     trees match {
-      case la :: lb :: ls => { // Fork(Leaf('a',2), Leaf('b',3), List('a','b'), 5)
-        val fork = makeCodeTree(la, lb)
-        combine(insertionSort(fork :: ls, compare))
-      }
+      case la :: lb :: ls => insert(makeCodeTree(la, lb), ls, compare)
       case _ => trees
     }
   }
@@ -184,7 +166,10 @@ object Huffman {
    *    the example invocation. Also define the return type of the `until` function.
    *  - try to find sensible parameter names for `xxx`, `yyy` and `zzz`.
    */
-  def until(xxx: ???, yyy: ???)(zzz: ???): ??? = ???
+  def until(condFunc: List[CodeTree] => Boolean, combineFunc: List[CodeTree] => List[CodeTree])(treeList: List[CodeTree]): List[CodeTree] = {
+    if (condFunc(treeList)) treeList
+    else until(condFunc, combineFunc)(combineFunc(treeList))
+  }
 
   /**
    * This function creates a code tree which is optimal to encode the text `chars`.
@@ -192,10 +177,13 @@ object Huffman {
    * The parameter `chars` is an arbitrary text. This function extracts the character
    * frequencies from that text and creates a code tree based on them.
    */
-  def createCodeTree(chars: List[Char]): CodeTree = ???
-
-
-
+  def createCodeTree(chars: List[Char]): CodeTree = {
+    until(singleton, combine)(makeOrderedLeafList(times(chars))) match {
+      case List(codeTree) => codeTree
+      case _ => throw new Error("No code trees available")
+    }
+  }
+  
   // Part 3: Decoding
 
   type Bit = Int
@@ -204,7 +192,28 @@ object Huffman {
    * This function decodes the bit sequence `bits` using the code tree `tree` and returns
    * the resulting list of characters.
    */
-  def decode(tree: CodeTree, bits: List[Bit]): List[Char] = ???
+  def decode(tree: CodeTree, bits: List[Bit]): List[Char] = {
+    def aux(ct: CodeTree, bitsLeft: List[Bit], acc: List[Char]): List[Char] = {
+      bitsLeft match {
+        case b :: bs => 
+          ct match {
+            case Fork(left, right, _, _) =>
+              b match {
+                case 0 => aux(left, bs, acc)
+                case 1 => aux(right, bs, acc)
+              }
+            case Leaf(char, _) => aux(tree, bitsLeft, char :: acc)
+          }
+        case List() => 
+          ct match {
+            case Fork(_,_,_,_) => acc
+            case Leaf(char, _) => char :: acc
+          }
+      }
+    }
+    
+    aux(tree, bits, List()).reverse
+  }
 
   /**
    * A Huffman coding tree for the French language.
@@ -222,9 +231,7 @@ object Huffman {
   /**
    * Write a function that returns the decoded secret
    */
-  def decodedSecret: List[Char] = ???
-
-
+  def decodedSecret: List[Char] = decode(frenchCode, secret)
 
   // Part 4a: Encoding using Huffman tree
 

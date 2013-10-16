@@ -15,9 +15,16 @@ class HuffmanSuite extends FunSuite {
     val chars1 = "abbcccddddeeeee".toList
     val chars2 = "abcdebcdecdedee".toList
     val chars3 = chars1.reverse
+    val chars4 = "ttxxexx".toList
     val expectedFrequencies = List(('a', 1), ('b', 2), ('c', 3), ('d', 4), ('e', 5))
     val expectedFrequencies2 = expectedFrequencies.reverse
     val orderedLeafList = List(Leaf('a', 1), Leaf('b', 2), Leaf('c', 3), Leaf('d', 4), Leaf('e', 5))
+    val leafList = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
+    val codeTree = Fork(Fork(Leaf('e',1),Leaf('t',2),List('e','t'),3),Leaf('x',4),List('e','t','x'),7)
+    val codeTree2 = Fork(Fork(Leaf('c',3),Fork(Leaf('a',1),Leaf('b',2),List('a', 'b'),3),List('c', 'a', 'b'),6),Fork(Leaf('d',4),Leaf('e',5),List('d', 'e'),9),List('c', 'a', 'b', 'd', 'e'),15)
+    val listCodeTree = List(codeTree)
+    val listCodeTree2 = List(codeTree2) //baddeadcab
+    val bits = List(0,1,1, 0,1,0, 1,0, 1,0, 1,1, 0,1,0, 1,0, 0,0, 0,1,0, 0,1,1)
   }
 
   test("weight of a larger tree") {
@@ -63,8 +70,30 @@ class HuffmanSuite extends FunSuite {
   }
 
   test("combine of some leaf list") {
-    val leaflist = List(Leaf('e', 1), Leaf('t', 2), Leaf('x', 4))
-    assert(combine(leaflist) === List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)))
+    new TestTrees {
+      assert(combine(leafList) === List(Fork(Leaf('e',1),Leaf('t',2),List('e', 't'),3), Leaf('x',4)))
+    }
+  }
+  
+  test("until should return a single list of the appropriate CodeTree") {
+    new TestTrees {
+      assert(until(singleton,combine)(leafList) === listCodeTree)
+      assert(until(singleton,combine)(orderedLeafList) === listCodeTree2)
+    }
+  }
+  
+  test("createCodeTree should create appropriate tree based on characters") {
+    new TestTrees {
+      assert(createCodeTree(chars4) === codeTree)
+      assert(createCodeTree(chars3) === codeTree2)
+    }
+  }
+  
+  test("decode baddeadcab") {
+    new TestTrees {
+      assert(decode(codeTree2, bits) === "baddeadcab".toList)
+      print(decodedSecret.mkString)
+    }
   }
 
   test("decode and encode a very short text should be identity") {
