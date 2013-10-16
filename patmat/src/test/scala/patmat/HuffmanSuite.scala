@@ -25,6 +25,7 @@ class HuffmanSuite extends FunSuite {
     val listCodeTree = List(codeTree)
     val listCodeTree2 = List(codeTree2) //baddeadcab
     val bits = List(0,1,1, 0,1,0, 1,0, 1,0, 1,1, 0,1,0, 1,0, 0,0, 0,1,0, 0,1,1)
+    val string1 = "baddeadcab".toList
   }
 
   test("weight of a larger tree") {
@@ -91,14 +92,25 @@ class HuffmanSuite extends FunSuite {
   
   test("decode baddeadcab") {
     new TestTrees {
-      assert(decode(codeTree2, bits) === "baddeadcab".toList)
-      print(decodedSecret.mkString)
+      assert(decode(codeTree2, bits) === string1)
     }
   }
 
   test("decode and encode a very short text should be identity") {
     new TestTrees {
       assert(decode(t1, encode(t1)("ab".toList)) === "ab".toList)
+      assert(decode(codeTree2, encode(codeTree2)(string1)) === string1)
+    }
+  }
+  test("full integration test of decode, encode and createCodeTree") {
+    new TestTrees {
+      val s1 = "hello world, you will be missed".toList
+      val s2 = "for one day, I shall rule them all".toList
+      val s3 = "or just continue using scala for fun".toList
+      for (s <- List(s1, s2, s3)) {
+        val ct = createCodeTree(s)
+        assert(decode(ct, encode(ct)(s)) === s)
+      }
     }
   }
 }
