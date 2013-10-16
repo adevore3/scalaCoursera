@@ -23,9 +23,22 @@ class HuffmanSuite extends FunSuite {
     val codeTree = Fork(Fork(Leaf('e',1),Leaf('t',2),List('e','t'),3),Leaf('x',4),List('e','t','x'),7)
     val codeTree2 = Fork(Fork(Leaf('c',3),Fork(Leaf('a',1),Leaf('b',2),List('a', 'b'),3),List('c', 'a', 'b'),6),Fork(Leaf('d',4),Leaf('e',5),List('d', 'e'),9),List('c', 'a', 'b', 'd', 'e'),15)
     val listCodeTree = List(codeTree)
-    val listCodeTree2 = List(codeTree2) //baddeadcab
+    val listCodeTree2 = List(codeTree2)
     val bits = List(0,1,1, 0,1,0, 1,0, 1,0, 1,1, 0,1,0, 1,0, 0,0, 0,1,0, 0,1,1)
     val string1 = "baddeadcab".toList
+    
+    val a = List(0, 1, 0)
+    val b = List(0, 1, 1)
+    val c = List(0, 0)
+    val d = List(1, 0)
+    val e = List(1, 1)
+    
+    val codeTable = List(
+      ('a', a),
+      ('b', b),
+      ('c', c),
+      ('d', d),
+      ('e', e))
   }
 
   test("weight of a larger tree") {
@@ -102,6 +115,7 @@ class HuffmanSuite extends FunSuite {
       assert(decode(codeTree2, encode(codeTree2)(string1)) === string1)
     }
   }
+  
   test("full integration test of decode, encode and createCodeTree") {
     new TestTrees {
       val s1 = "hello world, you will be missed".toList
@@ -111,6 +125,21 @@ class HuffmanSuite extends FunSuite {
         val ct = createCodeTree(s)
         assert(decode(ct, encode(ct)(s)) === s)
       }
+    }
+  }
+  
+  test("codeBits returns correct bits") {
+    new TestTrees {
+	  for ((char, bits) <- List(('a', a), ('b', b), ('c', c), ('d', d), ('e', e))) {
+	    assert(codeBits(codeTable)(char) === bits)
+	  }
+    }
+  }
+  
+  test("quickEncode encodes strings properly") {
+    new TestTrees {
+      assert(quickEncode(codeTree2)(string1) === bits)
+      assert(quickEncode(frenchCode)("huffmanestcool".toList) === secret)
     }
   }
 }
