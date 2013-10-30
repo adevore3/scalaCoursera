@@ -4,50 +4,6 @@ import common._
 import scala.collection.mutable.Map
 
 object Anagrams {
-  /*
-   *   val ss: List[(Char, Int)] = List(('a', 2))      //> ss  : List[(Char, Int)] = List((a,2))
-  val l: List[(Char, Int)] = List(('a', 2), ('b', 2))
-                                                  //> l  : List[(Char, Int)] = List((a,2), (b,2))
-  
-  def func( t: (Char, Int) ) =
-  	(for (i <- 0 to t._2) yield (t._1, i)).toList
-                                                  //> func: (t: (Char, Int))List[(Char, Int)]
-  	
-  val hard = for (s <- l) yield (func(s))         //> hard  : List[List[(Char, Int)]] = List(List((a,0), (a,1), (a,2)), List((b,0)
-                                                  //| , (b,1), (b,2)))
-  
-  def aux(ll: List[List[(Char, Int)]]): List[(Char, Int)] = ll match {
-		case List() => List()
-		case head :: tail => head match {
-			case List() => aux(tail)
-			case h :: t => h :: aux(tail)
-		}
-	}                                         //> aux: (ll: List[List[(Char, Int)]])List[(Char, Int)]
-  
-	def matches(listLeft: List[List[(Char,Int)]], acc: List[List[(Char, Int)]]): List[List[(Char, Int)]] = {
-		listLeft match {
-			case List() => acc
-			case head :: tail => head match {
-				case List() => matches(tail, acc)
-				case t :: tt => matches(tt :: tail, aux(listLeft) :: acc)
-			}
-		}
-	}                                         //> matches: (listLeft: List[List[(Char, Int)]], acc: List[List[(Char, Int)]])L
-                                                  //| ist[List[(Char, Int)]]
-                                                  
-  val l1 = List(List(1, 2), List(3, 4))           //> l1  : List[List[Int]] = List(List(1, 2), List(3, 4))
-  val l2 = List(List(3), List(4), List(6), List(8))
-                                                  //> l2  : List[List[Int]] = List(List(3), List(4), List(6), List(8))
-  
-  def rec(listList: List[List[Int]]): List[List[Int]] = {
-  	listList match {
-  		case List() => List()
-  		case listHead :: listTail => listHead match {
-  			case List() => 
-  		}
-  	}
-  }
-   */
 
   /** A word is simply a `String`. */
   type Word = String
@@ -177,7 +133,7 @@ object Anagrams {
   /** Returns all the anagrams of a given word. */
   def wordAnagrams(word: Word): List[Word] = dictionaryByOccurrences.get(wordOccurrences(word)) match {
     case None => List()
-    case Some(l) => l
+    case Some(anagram) => anagram
   }
 
   /** Returns the list of all subsets of the occurrence list.
@@ -202,7 +158,21 @@ object Anagrams {
    *  Note that the order of the occurrence list subsets does not matter -- the subsets
    *  in the example above could have been displayed in some other order.
    */
-  def combinations(occurrences: Occurrences): List[Occurrences] = ???
+  def combinations(occurrences: Occurrences): List[Occurrences] = {
+    def aux(list: List[Occurrences], partialAcc: Occurrences, acc: List[Occurrences]): List[Occurrences] = list match {
+	  case List() => partialAcc :: acc
+	  case head :: tail => head match {
+	  	case List() => aux(tail, partialAcc, acc)
+	  	case h :: t => aux(tail, partialAcc ++ List(h), aux(t :: tail, partialAcc, acc))
+	  }
+	}
+    
+    def func( t: (Char, Int) ) = (for (i <- 1 to t._2) yield (t._1, i)).toList
+  	
+    val l = for (s <- occurrences) yield (func(s))
+    
+    aux(l, List(), List())
+  }
 
   /** Subtracts occurrence list `y` from occurrence list `x`.
    * 
@@ -214,7 +184,25 @@ object Anagrams {
    *  Note: the resulting value is an occurrence - meaning it is sorted
    *  and has no zero-entries.
    */
-  def subtract(x: Occurrences, y: Occurrences): Occurrences = ???
+  def subtract(x: Occurrences, y: Occurrences): Occurrences = {
+    def aux(remainder: Occurrences, remove: Occurrences): Occurrences = {
+      remainder match {
+        case List() => remainder
+        case (xc, xi) :: remainderTail => remove match {
+          case List() => (xc, xi) :: aux(remainderTail, y)
+          case (yc, yi) :: removeTail =>
+            if (xc == yc) {
+              if (xi > yi) (xc, xi - yi) :: aux(remainderTail, removeTail)
+              else aux(remainderTail, removeTail)
+            } else {
+              aux(remainder, removeTail)
+            }
+        }
+      }
+    }
+    aux(x, y)
+  }
+    
 
   /** Returns a list of all anagram sentences of the given sentence.
    *  
@@ -256,6 +244,35 @@ object Anagrams {
    *
    *  Note: There is only one anagram of an empty sentence.
    */
-  def sentenceAnagrams(sentence: Sentence): List[Sentence] = ???
+  def sentenceAnagrams(sentence: Sentence): List[Sentence] = {
+    def aux(combos: List[Occurrences], occurrencesLeft: Occurrences, sentenceAcc: Sentence, acc: List[Sentence]): List[Sentence] = {
+      occurrencesLeft match {
+        case List() => sentenceAcc :: acc
+        case _ => combos match {
+	      case List() => acc
+	      case occurrence :: tail => {
+	        dictionaryByOccurrences.get(occurrence) match {
+			  case None => aux(tail, occurrencesLeft, sentenceAcc, acc)
+			  case Some(anagrams) => {
+			    val newOccurrencesLeft = subtract(occurrencesLeft, occurrence) 
+	            (for (a <- anagrams) 
+	              yield (aux(
+	            		  combinations(newOccurrencesLeft), 
+	            		  newOccurrencesLeft,
+	            		  a :: sentenceAcc,
+	            		  acc))
+	            ).flatten
+			  }
+	        }
+	      }
+	    } 
+      } 
+    }
 
+    val occurrences = sentenceOccurrences(sentence)
+    aux(combinations(occurrences), occurrences, List(), List())
+     
+  }
+
+  
 }
