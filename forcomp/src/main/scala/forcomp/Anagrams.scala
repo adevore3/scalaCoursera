@@ -4,6 +4,50 @@ import common._
 import scala.collection.mutable.Map
 
 object Anagrams {
+  /*
+   *   val ss: List[(Char, Int)] = List(('a', 2))      //> ss  : List[(Char, Int)] = List((a,2))
+  val l: List[(Char, Int)] = List(('a', 2), ('b', 2))
+                                                  //> l  : List[(Char, Int)] = List((a,2), (b,2))
+  
+  def func( t: (Char, Int) ) =
+  	(for (i <- 0 to t._2) yield (t._1, i)).toList
+                                                  //> func: (t: (Char, Int))List[(Char, Int)]
+  	
+  val hard = for (s <- l) yield (func(s))         //> hard  : List[List[(Char, Int)]] = List(List((a,0), (a,1), (a,2)), List((b,0)
+                                                  //| , (b,1), (b,2)))
+  
+  def aux(ll: List[List[(Char, Int)]]): List[(Char, Int)] = ll match {
+		case List() => List()
+		case head :: tail => head match {
+			case List() => aux(tail)
+			case h :: t => h :: aux(tail)
+		}
+	}                                         //> aux: (ll: List[List[(Char, Int)]])List[(Char, Int)]
+  
+	def matches(listLeft: List[List[(Char,Int)]], acc: List[List[(Char, Int)]]): List[List[(Char, Int)]] = {
+		listLeft match {
+			case List() => acc
+			case head :: tail => head match {
+				case List() => matches(tail, acc)
+				case t :: tt => matches(tt :: tail, aux(listLeft) :: acc)
+			}
+		}
+	}                                         //> matches: (listLeft: List[List[(Char, Int)]], acc: List[List[(Char, Int)]])L
+                                                  //| ist[List[(Char, Int)]]
+                                                  
+  val l1 = List(List(1, 2), List(3, 4))           //> l1  : List[List[Int]] = List(List(1, 2), List(3, 4))
+  val l2 = List(List(3), List(4), List(6), List(8))
+                                                  //> l2  : List[List[Int]] = List(List(3), List(4), List(6), List(8))
+  
+  def rec(listList: List[List[Int]]): List[List[Int]] = {
+  	listList match {
+  		case List() => List()
+  		case listHead :: listTail => listHead match {
+  			case List() => 
+  		}
+  	}
+  }
+   */
 
   /** A word is simply a `String`. */
   type Word = String
