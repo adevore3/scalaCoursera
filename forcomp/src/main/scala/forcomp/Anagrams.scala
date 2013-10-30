@@ -1,6 +1,7 @@
 package forcomp
 
 import common._
+import scala.collection.mutable.Map
 
 object Anagrams {
 
@@ -27,16 +28,80 @@ object Anagrams {
    *  It is predefined and obtained as a sequence using the utility method `loadDictionary`.
    */
   val dictionary: List[Word] = loadDictionary
+  
+  /**
+   * This function computes for each unique character in the list `chars` the number of
+   * times it occurs. For example, the invocation
+   *
+   *   times(List('a', 'b', 'a'))
+   *
+   * should return the following (the order of the resulting list is not important):
+   *
+   *   List(('a', 2), ('b', 1))
+   *
+   * The type `List[(Char, Int)]` denotes a list of pairs, where each pair consists of a
+   * character and an integer. Pairs can be constructed easily using parentheses:
+   *
+   *   val pair: (Char, Int) = ('c', 1)
+   *
+   * In order to access the two elements of a pair, you can use the accessors `_1` and `_2`:
+   *
+   *   val theChar = pair._1
+   *   val theInt  = pair._2
+   *
+   * Another way to deconstruct a pair is using pattern matching:
+   *
+   *   pair match {
+   *     case (theChar, theInt) =>
+   *       println("character is: "+ theChar)
+   *       println("integer is  : "+ theInt)
+   *   }
+   */
+  def times(chars: List[Char]): List[(Char, Int)] = {
+    def updateAcc(c: Char, charCounts: List[(Char, Int)]): List[(Char, Int)] = charCounts match {
+      case x :: xs => 
+        if (x._1 == c) (c, x._2 + 1) :: xs
+        else x :: updateAcc(c, xs)
+      case List() => List((c, 1))
+    }
+    
+    def aux(cs: List[Char], acc: List[(Char, Int)]): List[(Char, Int)] = {
+      cs match {
+        case x :: xs => aux(xs, updateAcc(x, acc))
+        case List() => acc
+      }
+    }
+    
+    aux(chars, List[(Char, Int)]())
+  }
+  
+  def insert[A](elem: A, la: List[A], f: (A, A) => Boolean): List[A] = {
+    def aux(x: A, lx: List[A]): List[A] = lx match {
+      case List() => List(x)
+	  case l :: ls => 
+	    if (f(x, l)) x :: lx 
+	    else l :: aux(x, ls)  
+    }
+	aux(elem, la)
+  }
+
+  def insertionSort[A](la: List[A], f: (A, A) => Boolean): List[A] = {
+    la match {
+      case List() => List()
+      case l :: ls => insert(l, insertionSort(ls, f), f)
+    }
+  }
 
   /** Converts the word into its character occurence list.
    *  
    *  Note: the uppercase and lowercase version of the character are treated as the
    *  same character, and are represented as a lowercase character in the occurrence list.
    */
-  def wordOccurrences(w: Word): Occurrences = ???
+  def wordOccurrences(w: Word): Occurrences = 
+    insertionSort(times(w.toLowerCase.toList), (p: (Char,Int), p2: (Char,Int)) => p._1 < p2._1)
 
   /** Converts a sentence into its character occurrence list. */
-  def sentenceOccurrences(s: Sentence): Occurrences = ???
+  def sentenceOccurrences(s: Sentence): Occurrences = wordOccurrences(s.flatten.mkString)
 
   /** The `dictionaryByOccurrences` is a `Map` from different occurrences to a sequence of all
    *  the words that have that occurrence count.
@@ -53,10 +118,23 @@ object Anagrams {
    *    List(('a', 1), ('e', 1), ('t', 1)) -> Seq("ate", "eat", "tea")
    *
    */
-  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = ???
+  lazy val dictionaryByOccurrences: Map[Occurrences, List[Word]] = {
+    var map: Map[Occurrences, List[Word]] = Map.empty
+    for (w <- dictionary) {
+      val o = wordOccurrences(w)
+      map.get(o) match {
+        case None => map.put(o, List(w))
+        case Some(l) => map.put(o, w :: l)
+      }
+    }
+    map
+  }
 
   /** Returns all the anagrams of a given word. */
-  def wordAnagrams(word: Word): List[Word] = ???
+  def wordAnagrams(word: Word): List[Word] = dictionaryByOccurrences.get(wordOccurrences(word)) match {
+    case None => List()
+    case Some(l) => l
+  }
 
   /** Returns the list of all subsets of the occurrence list.
    *  This includes the occurrence itself, i.e. `List(('k', 1), ('o', 1))`
